@@ -49,8 +49,9 @@ mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 `main.ts` copies `app/` and `screenshots/` to the output directory and writes `dossier.json`
 with the vendored `buildDossier` from `vendor/makefun-app.ts` (the kit's library, unchanged).
 
-The screenshots in `screenshots/` are the studio's own work: two exported covers and the editor
-with a photo loaded, produced by driving the app through the scenes in `shots.json`.
+The screenshots in `screenshots/` are the studio's own work: three exported covers (wide, portrait
+and square) and the editor with a photo loaded, produced by driving the app through the scenes in
+`shots.json` — each cover is the PNG the app exported, scaled down to the hand-in limits.
 
 ## License
 

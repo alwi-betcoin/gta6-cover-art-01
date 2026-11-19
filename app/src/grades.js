@@ -1,8 +1,8 @@
 // Colour grades for Palmwave Cover Studio. A grade is applied to a photo once, on an offscreen
-// canvas, and cached: contrast and saturation first, then a posterize step that flattens the photo
-// toward the illustrated poster look, then a gentle split tone (shadows toward the grade's cool
-// colour, highlights toward its warm one) kept weak so skin tones stay plausible. The renderer also
-// reads each grade's wash, accent and keyline colours for the finished cover.
+// canvas, and cached: contrast and saturation first, then a gentle split tone (shadows toward the
+// grade's cool colour, highlights toward its warm one) kept weak so skin tones stay plausible, and
+// a posterize step last that flattens everything into the illustrated poster's flat colour steps.
+// The renderer also reads each grade's wash, accent and keyline colours for the finished cover.
 
 export const GRADES = [
   {
@@ -78,7 +78,7 @@ export function gradedPhoto(img, grade, key) {
   return canvas;
 }
 
-/** The in-place pixel pass behind gradedPhoto: saturation, contrast, posterize, split tone. */
+/** The in-place pixel pass behind gradedPhoto: saturation, contrast, split tone, posterize last. */
 function applyGrade(data, grade) {
   const { saturation: sat, contrast: con, levels, shadow, highlight, tone } = grade;
   const step = 255 / (levels - 1);
@@ -91,14 +91,16 @@ function applyGrade(data, grade) {
     r = (r - 128) * con + 128;
     g = (g - 128) * con + 128;
     b = (b - 128) * con + 128;
-    r = Math.round(r / step) * step;
-    g = Math.round(g / step) * step;
-    b = Math.round(b / step) * step;
     const t = Math.min(255, Math.max(0, luma)) / 255;
     const mixShadow = (1 - t) * tone;
     const mixHighlight = t * tone * 0.7;
-    data[i] = r + (shadow[0] - r) * mixShadow + (highlight[0] - r) * mixHighlight;
-    data[i + 1] = g + (shadow[1] - g) * mixShadow + (highlight[1] - g) * mixHighlight;
-    data[i + 2] = b + (shadow[2] - b) * mixShadow + (highlight[2] - b) * mixHighlight;
+    r = r + (shadow[0] - r) * mixShadow + (highlight[0] - r) * mixHighlight;
+    g = g + (shadow[1] - g) * mixShadow + (highlight[1] - g) * mixHighlight;
+    b = b + (shadow[2] - b) * mixShadow + (highlight[2] - b) * mixHighlight;
+    // Posterize last of all: the tone mix above follows the photo's continuous luma, so quantizing
+    // after it is what actually flattens the photo into the poster's flat colour steps.
+    data[i] = Math.round(r / step) * step;
+    data[i + 1] = Math.round(g / step) * step;
+    data[i + 2] = Math.round(b / step) * step;
   }
 }
